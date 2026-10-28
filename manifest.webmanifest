@@ -27,5 +27,40 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hablar con Robotito",
+      "short_name": "Hablar",
+      "url": "./#hablar",
+      "icons": [
+        {
+          "src": "icono-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Traductor",
+      "short_name": "Traductor",
+      "url": "./#traductor",
+      "icons": [
+        {
+          "src": "icono-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Profesor de inglés",
+      "short_name": "Inglés",
+      "url": "./#profesor",
+      "icons": [
+        {
+          "src": "icono-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
