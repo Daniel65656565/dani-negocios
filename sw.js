@@ -1,5 +1,5 @@
 // Guarda la app en el teléfono para que abra rápido. Los datos siempre se piden al servidor.
-const VERSION = "dani-negocios-20261028-064321";
+const VERSION = "dani-negocios-20261028-100921";
 const ARCHIVOS = ["./", "index.html", "supabase-config.js", "manifest.webmanifest", "icono-192.png", "icono-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -13,7 +13,7 @@ self.addEventListener("fetch", e => {
 // Notificaciones (avisos al teléfono): llegan cifradas desde la función "avisos".
 self.addEventListener("push", e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { b: e.data ? e.data.text() : "" }; }
-  const titulo = d.t || "DANI Negocios";
+  const titulo = d.t || "DANI Mi Negocio";
   e.waitUntil(self.registration.showNotification(titulo, {
     body: d.b || "", icon: "icono-192.png", badge: "icono-192.png", tag: (d.u || "") + "|" + (d.b || "").slice(0, 40),
     data: { u: d.u || "./" }, vibrate: [200, 100, 200], requireInteraction: titulo === "Recordatorio"
