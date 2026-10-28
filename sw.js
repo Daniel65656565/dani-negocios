@@ -1,6 +1,6 @@
 // Guarda la app en el teléfono para que abra rápido. Los datos siempre se piden al servidor.
-const VERSION = "dani-negocios-20261028-123339";
-const ARCHIVOS = ["./", "index.html", "supabase-config.js", "manifest.webmanifest", "icono-192.png", "icono-512.png"];
+const VERSION = "dani-negocios-20261028-172653";
+const ARCHIVOS = ["./", "index.html", "supabase-config.js", "manifest.webmanifest", "icono-192.png", "icono-512.png", "frases.js", "charla.js"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
