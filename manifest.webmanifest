@@ -1,6 +1,6 @@
 {
-  "name": "DANI Mi Negocio",
-  "short_name": "DANI Mi Negocio",
+  "name": "Dani Pro",
+  "short_name": "Dani Pro",
   "description": "Tus negocios en una sola app: citas, pedidos, envíos, mensajes y pagos.",
   "start_url": "./",
   "scope": "./",
