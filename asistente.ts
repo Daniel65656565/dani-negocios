@@ -170,6 +170,23 @@ Deno.serve(async (req) => {
     const texto = String(b.texto ?? "").trim().slice(0, 400);
     const idioma: "es" | "en" = b.idioma === "en" ? "en" : "es";
     // Foto (carta, formulario o "¿es estafa?"): la IA la lee y lo explica en sencillo. Cuesta créditos de la persona. La foto NO se guarda.
+    // Prueba del motor (solo el administrador): para cada pregunta, lo que contestan las fichas solas y lo que contesta el motor
+    if (b.accion === "prueba_motor") {
+      const { data: adm } = await db.from("admins").select("user_id").eq("user_id", user).maybeSingle();
+      if (!adm) return json({ error: "Solo el administrador." }, 403);
+      const lista = (Array.isArray(b.preguntas) ? b.preguntas : []).slice(0, 10);
+      const resultados: any[] = [];
+      for (const it of lista) {
+        const q = String(it?.q ?? "").trim().slice(0, 300); const tipo = String(it?.tipo ?? "general").replace(/[^a-z]/g, "") || "general";
+        if (!q) continue;
+        const { data: cs } = await db.rpc("buscar_ficha", { p_texto: q, p_tipo: tipo === "x" ? "general" : tipo, p_limite: 5 });
+        const top = (cs ?? [])[0];
+        const fs = (cs ?? []).map((f: any) => ({ pregunta: f.pregunta, texto: f.respuesta_es, accion: f.accion, parecido: f.parecido })).filter((f: any) => f.texto && !/\{[a-z_]+\}/.test(f.texto));
+        const m = esTrampa(q) ? null : await motor(user, null, q, "es", fs, "Robotito", null);
+        resultados.push({ q, tipo, ficha: top ? { parecido: top.parecido, pregunta: top.pregunta, respuesta: top.respuesta_es } : null, motor: m ? m.respuesta : null });
+      }
+      return json({ ok: true, llave: !!MKEY, resultados });
+    }
     if (b.accion === "foto") {
       const tipo = ["carta", "formulario", "estafa"].includes(b.tipo) ? b.tipo : "carta";
       const img = String(b.imagen ?? "");

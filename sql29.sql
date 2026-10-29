@@ -57,8 +57,9 @@ begin
   if auth.uid() is not null then raise exception 'solo el servidor'; end if;
   select * into c from public.motor_config where id = 1;
   if not coalesce(c.prendido, false) then return jsonb_build_object('ok', false, 'motivo', 'apagado'); end if;
+  -- el administrador (pruebas) no tiene tope por persona
   select u.n into k from public.motor_uso u where u.user_id = p_user and u.dia = d;
-  if coalesce(k, 0) >= c.tope_dia_persona then return jsonb_build_object('ok', false, 'motivo', 'tope_persona'); end if;
+  if coalesce(k, 0) >= c.tope_dia_persona and not exists (select 1 from public.admins a where a.user_id = p_user) then return jsonb_build_object('ok', false, 'motivo', 'tope_persona'); end if;
   if p_negocio is not null then
     b := public.ia_bolsa_ok(p_negocio);
     if coalesce((b->>'ok')::boolean, false) then paga := 'negocio'; end if;
