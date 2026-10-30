@@ -173,6 +173,17 @@ function pareceDato(campo: string, t: string): boolean {
   if (campo === "mensaje") return n >= 3;
   return false;
 }
+// ¿Este dato lo dijo de verdad la persona? (la IA a veces inventa direcciones o deja "[nombre]")
+const sinTilde = (x: string) => String(x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function loDijo(valor: string, dicho: string, campo: string): boolean {
+  const v = String(valor ?? "").trim();
+  if (!v || /[\[\]{}<>]|ejemplo|example|xxx|n\/a/i.test(v)) return false;
+  if (campo === "telefono") { const d = v.replace(/\D/g, ""); return d.length >= 7 && dicho.replace(/\D/g, "").includes(d.slice(-7)); }
+  const D = " " + sinTilde(dicho).replace(/[^a-z0-9ñ ]+/g, " ") + " ";
+  const vacias = new Set(["el","la","los","las","de","del","en","por","para","una","uno","que","the","and","for","with","a","al","las","mi","my","is","es","at","on","in"]);
+  const pal = sinTilde(v).replace(/[^a-z0-9ñ ]+/g, " ").split(/\s+/).filter((w) => w.length >= 2 && !vacias.has(w));
+  return pal.length > 0 && pal.some((w) => D.includes(" " + w + " "));
+}
 const ACCIONES = ["ninguna", "cita_lista", "recado_listo", "pasar_persona", "despedir"];
 const cad = (v: unknown, n = 200) => (typeof v === "string" ? v.trim().slice(0, n) : typeof v === "number" ? String(v) : "");
 // ¿En qué idioma habla? Cuenta palabras típicas de cada uno; si no se sabe, se queda con el de antes.
@@ -276,10 +287,14 @@ Lo último que preguntaste fue el dato "${campo}"; si lo que dice la persona lo 
   for (const [k, n] of [["nombre", 80], ["telefono", 30], ["direccion", 200], ["dia_hora", 120], ["motivo", 200]] as const) { const v = cad(jc[k], n); if (v) citaN[k] = v; }
   const enCita = Object.keys(citaAntes).length > 0 || !!cad(jc.nombre) || /cita|presupuesto|visita|quote|appointment|estimate/i.test(historial.slice(-4).map((h: any) => h?.texto ?? "").join(" ") + " " + texto);
   if (campo && campo !== "mensaje" && !citaN[campo] && enCita && !Object.keys(recadoAntes).length && pareceDato(campo, texto)) citaN[campo] = texto.slice(0, campo === "nombre" ? 80 : 120);
+  const dicho = [...historial.filter((h: any) => h && h.rol === "cliente").map((h: any) => String(h.texto ?? "")), texto, numeroCliente ?? ""].join(" \n ");
+  for (const k of ["nombre", "telefono", "direccion", "dia_hora"]) if (citaN[k] && !loDijo(citaN[k], dicho, k)) delete citaN[k];
+  if (citaN.motivo && /[\[\]{}<>]/.test(citaN.motivo)) delete citaN.motivo;
   const cita = citaN.nombre ? { nombre: citaN.nombre, telefono: citaN.telefono ?? "", direccion: citaN.direccion ?? "", dia_hora: citaN.dia_hora ?? "", motivo: citaN.motivo ?? "" } : null;
   const recadoN: Record<string, string> = { ...recadoAntes };
   for (const [k, n] of [["nombre", 80], ["telefono", 30], ["mensaje", 1000]] as const) { const v = cad(jr[k], n); if (v) recadoN[k] = v; }
   if (campo && Object.keys(recadoAntes).length && !recadoN[campo] && (campo === "nombre" || campo === "telefono" || campo === "mensaje") && pareceDato(campo, texto)) recadoN[campo] = texto.slice(0, campo === "mensaje" ? 1000 : 80);
+  for (const k of ["nombre", "telefono", "mensaje"]) if (recadoN[k] && !loDijo(recadoN[k], dicho, k)) delete recadoN[k];
   const recado = recadoN.nombre || recadoN.mensaje ? { nombre: recadoN.nombre ?? "", telefono: recadoN.telefono ?? "", mensaje: recadoN.mensaje ?? "" } : null;
   // la IA a veces dice "lista" antes de tiempo: solo vale si de verdad están los datos
   if (accion === "cita_lista" && !(cita && cita.nombre && (cita.direccion || !aDomicilio) && cita.dia_hora && (cita.telefono || numeroCliente))) accion = "ninguna";
