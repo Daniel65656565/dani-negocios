@@ -160,7 +160,9 @@ async function pensar(negocioId: string, historial: any[], texto: string, numero
   // fichas parecidas a lo último que dijo (y a lo anterior, para preguntas cortas como "¿y cuánto cuesta?"), al mismo tiempo que se revisa el motor
   const consulta = [historial.filter((h) => h.rol === "cliente").slice(-1)[0]?.texto ?? "", texto].join(" ").slice(-300);
   const tipo = neg.config?.bibliotecaTipo ?? neg.tipo;
-  const [c, rc] = await Promise.all([motorOk(), db.rpc("buscar_ficha", { p_texto: consulta, p_tipo: tipo, p_limite: 5 })]);
+  const ultimaIA = String([...historial].reverse().find((h) => h.rol === "ia")?.texto ?? "");
+  const soloDato = texto.split(/\s+/).length <= 5 && /\?\s*$/.test(ultimaIA) && !/[¿?]/.test(texto);   // contesta lo que le preguntamos ("Luis Gómez", "en Brandon")
+  const [c, rc] = await Promise.all([motorOk(), soloDato ? Promise.resolve({ data: [] }) : db.rpc("buscar_ficha", { p_texto: consulta, p_tipo: tipo, p_limite: 5 })]);
   const cands = rc?.data; ms.preparar = Date.now() - t0;
   const enIngles = /\b(the|you|what|how|is|are|do|does|can|i|my|price|cost|hi|hello|yes|no)\b/i.test(texto) && !/[áéíóúñ¿¡]/i.test(texto);
   if (!c) return { respuesta: enIngles ? "Let me connect you with someone from our team." : "Permítame comunicarle con alguien del equipo.", accion: "pasar_persona", idioma: enIngles ? "en" : "es", costo: 0, supo: false };
@@ -176,7 +178,7 @@ Hablas por teléfono: contesta con 1 o 2 frases cortas, naturales y fáciles de 
 Contesta en el MISMO idioma en que te habla la persona (español o inglés). Si mezcla, usa el que más use.
 REGLA MÁS IMPORTANTE: usa SOLO los DATOS DEL NEGOCIO y las FICHAS de abajo. Nunca inventes precios, horarios, descuentos, fechas ni promesas.
 Si no sabes algo, dilo con honestidad y ofrece tomar un recado o pasar la llamada a una persona.
-CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, luego la dirección o ciudad, luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. ${numeroCliente ? `Al final confirma su teléfono (llama desde ${numeroCliente}; pregunta si ese es el bueno).` : "Al final pide su número de teléfono."} Solo cuando tengas nombre, lugar, día y teléfono usa accion "cita_lista", y una sola vez; después usa "ninguna". Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Cuando tengas todo, accion "cita_lista".
+CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, luego la dirección o ciudad, luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. ${numeroCliente ? `Al final confirma su teléfono (llama desde ${numeroCliente}; pregunta si ese es el bueno).` : "Al final pide su número de teléfono."} Solo cuando tengas nombre, lugar, día y teléfono usa accion "cita_lista", y una sola vez; después usa "ninguna". Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Mientras pides los datos, llena SIEMPRE en "cita" todo lo que ya te dijo (aunque falte algo), así no se pierde si cuelga.
 RECADOS: si quiere dejar un mensaje, pide nombre, teléfono y el mensaje; luego accion "recado_listo".
 Si pide hablar con una persona, está molesto, o es una emergencia o queja seria: accion "pasar_persona" (si es emergencia de vida, dile que cuelgue y llame al 911).
 Si se despide o ya terminó: accion "despedir" con una despedida corta.
