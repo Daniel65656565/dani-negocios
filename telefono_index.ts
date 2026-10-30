@@ -100,6 +100,15 @@ function esTrampa(t: string): boolean {
 const MKEY = Deno.env.get("MOTOR_API_KEY") ?? "";
 const SECRETO = Deno.env.get("TELEFONO_SECRETO") ?? "";
 const MAX_TURNOS = 40;
+// Para que la llamada no espere: lo que no cambia seguido se guarda unos segundos en memoria,
+// y lo que se escribe en la base se hace DESPUÉS de contestar (EdgeRuntime.waitUntil).
+declare const EdgeRuntime: any;
+const enSegundoPlano = (p: Promise<unknown>) => { try { if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) { EdgeRuntime.waitUntil(p); return; } } catch (_) { /* sigue */ } return p; };
+const CACHE = new Map<string, { hasta: number; v: any }>();
+async function guardado<T>(clave: string, ms: number, f: () => Promise<T>): Promise<T> {
+  const x = CACHE.get(clave); if (x && x.hasta > Date.now()) return x.v as T;
+  const v = await f(); CACHE.set(clave, { hasta: Date.now() + ms, v }); if (CACHE.size > 200) CACHE.delete(CACHE.keys().next().value!); return v;
+}
 
 function iguales(a: string, b: string) {   // comparación que no deja adivinar la clave por el tiempo
   if (!a || !b || a.length !== b.length) return false;
@@ -114,7 +123,8 @@ function saludos(nombre: string) {
 }
 
 // ¿Qué negocio y qué datos? (los mismos datos que usa el asistente de la app)
-async function datosNegocio(negocioId: string) {
+async function datosNegocio(negocioId: string) { return guardado("neg:" + negocioId, 60000, () => datosNegocioBase(negocioId)); }
+async function datosNegocioBase(negocioId: string) {
   const { data: neg } = await db.from("negocios").select("id,nombre,tipo,estado,config").eq("id", negocioId).single();
   if (!neg) return null;
   const c = neg.config ?? {};
@@ -130,7 +140,8 @@ async function datosNegocio(negocioId: string) {
   };
 }
 
-async function motorOk(): Promise<any | null> {
+async function motorOk(): Promise<any | null> { return guardado("motor", 30000, motorOkBase); }
+async function motorOkBase(): Promise<any | null> {
   const { data: c } = await db.from("motor_config").select("*").eq("id", 1).single();
   if (!c?.prendido || !MKEY) return null;
   const mes = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit" }).format(new Date()).slice(0, 7);
@@ -142,17 +153,18 @@ async function motorOk(): Promise<any | null> {
 const ACCIONES = ["ninguna", "cita_lista", "recado_listo", "pasar_persona", "despedir"];
 
 async function pensar(negocioId: string, historial: any[], texto: string, numeroCliente: string | null) {
+  const t0 = Date.now(); const ms: Record<string, number> = {};
   const nd = await datosNegocio(negocioId);
   if (!nd) return { respuesta: "", accion: "pasar_persona", idioma: "es", costo: 0, supo: false };
   const { neg, datos } = nd;
-  const c = await motorOk();
+  // fichas parecidas a lo último que dijo (y a lo anterior, para preguntas cortas como "¿y cuánto cuesta?"), al mismo tiempo que se revisa el motor
+  const consulta = [historial.filter((h) => h.rol === "cliente").slice(-1)[0]?.texto ?? "", texto].join(" ").slice(-300);
+  const tipo = neg.config?.bibliotecaTipo ?? neg.tipo;
+  const [c, rc] = await Promise.all([motorOk(), db.rpc("buscar_ficha", { p_texto: consulta, p_tipo: tipo, p_limite: 5 })]);
+  const cands = rc?.data; ms.preparar = Date.now() - t0;
   const enIngles = /\b(the|you|what|how|is|are|do|does|can|i|my|price|cost|hi|hello|yes|no)\b/i.test(texto) && !/[áéíóúñ¿¡]/i.test(texto);
   if (!c) return { respuesta: enIngles ? "Let me connect you with someone from our team." : "Permítame comunicarle con alguien del equipo.", accion: "pasar_persona", idioma: enIngles ? "en" : "es", costo: 0, supo: false };
 
-  // fichas parecidas a lo último que dijo (y a lo anterior, para preguntas cortas como "¿y cuánto cuesta?")
-  const consulta = [historial.filter((h) => h.rol === "cliente").slice(-1)[0]?.texto ?? "", texto].join(" ").slice(-300);
-  const tipo = neg.config?.bibliotecaTipo ?? neg.tipo;
-  const { data: cands } = await db.rpc("buscar_ficha", { p_texto: consulta, p_tipo: tipo, p_limite: 5 });
   const vals = valores(neg, "es", texto);
   const fichas = (cands ?? []).filter((f: any) => Number(f.parecido ?? 0) >= 0.08).map((f: any) => {
     const t = llenar(f.respuesta_es ?? "", vals); return { pregunta: f.pregunta, respuesta: t.faltan.length ? "" : t.texto };
@@ -183,28 +195,28 @@ FICHAS: ${JSON.stringify(fichas).slice(0, 2500)}`;
     try { return await fetch(String(c.url), { method: "POST", signal: ac.signal, headers: { "authorization": "Bearer " + MKEY, "content-type": "application/json" }, body: JSON.stringify(b) }); }
     finally { clearTimeout(t); }
   };
-  let r: Response;
+  let r: Response; const t1 = Date.now();
   try {
     r = await llamar(cuerpo);
     if (r.status === 400) { delete cuerpo.reasoning_effort; r = await llamar(cuerpo); }
     if (r.status === 429 || r.status >= 500) { const ra = Number(r.headers.get("retry-after") ?? "1"); await new Promise((ok) => setTimeout(ok, Math.min(2500, Math.max(600, (isFinite(ra) ? ra : 1) * 1000)))); r = await llamar(cuerpo); }
     if (!r.ok) console.error("motor", r.status, (await r.clone().text()).slice(0, 200));
   } catch (_) { r = new Response("{}", { status: 599 }); }
-  const o: any = await r.json().catch(() => ({}));
+  const o: any = await r.json().catch(() => ({})); ms.motor = Date.now() - t1;
   const uso = o.usage ?? {};
   const costo = ((uso.prompt_tokens ?? 0) * Number(c.precio_in) + (uso.completion_tokens ?? 0) * Number(c.precio_out)) / 1e6;
   const txt = String(o?.choices?.[0]?.message?.content ?? "");
   let j: any = null; try { j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch (_) { j = null; }
   const resp = String(j?.respuesta ?? "").replace(/[*#_`>\[\]]/g, "").trim().slice(0, 400);
   const supo = r.ok && !!resp;
-  await db.rpc("motor_anotar", { p_negocio: negocioId, p_paga: "admin", p_costo: costo, p_supo: supo });
+  enSegundoPlano(db.rpc("motor_anotar", { p_negocio: negocioId, p_paga: "admin", p_costo: costo, p_supo: supo }));
   if (!supo) {
     const fallaAntes = historial.length > 0 && (historial[historial.length - 1] as any).fallo === true;
-    if (!fallaAntes) return { respuesta: enIngles ? "Sorry, could you say that again?" : "Disculpe, ¿me lo puede repetir?", accion: "ninguna", idioma: enIngles ? "en" : "es", costo, supo, fallo: true };
-    return { respuesta: enIngles ? "Sorry, let me connect you with someone from our team." : "Disculpe, permítame comunicarle con alguien del equipo.", accion: "pasar_persona", idioma: enIngles ? "en" : "es", costo, supo, fallo: true };
+    if (!fallaAntes) return { respuesta: enIngles ? "Sorry, could you say that again?" : "Disculpe, ¿me lo puede repetir?", accion: "ninguna", idioma: enIngles ? "en" : "es", costo, supo, fallo: true, ms };
+    return { respuesta: enIngles ? "Sorry, let me connect you with someone from our team." : "Disculpe, permítame comunicarle con alguien del equipo.", accion: "pasar_persona", idioma: enIngles ? "en" : "es", costo, supo, fallo: true, ms };
   }
   const accion = ACCIONES.includes(String(j?.accion)) ? String(j.accion) : "ninguna";
-  return { respuesta: resp, accion, idioma: j?.idioma === "en" ? "en" : "es", cita: j?.cita ?? null, recado: j?.recado ?? null, costo, supo };
+  return { respuesta: resp, accion, idioma: j?.idioma === "en" ? "en" : "es", cita: j?.cita ?? null, recado: j?.recado ?? null, costo, supo, ms };
 }
 
 const corto = (v: unknown, n = 200) => (v == null ? null : String(v).trim().slice(0, n) || null);
@@ -260,7 +272,9 @@ Deno.serve(async (req) => {
       if (ll.turnos >= MAX_TURNOS) p = { respuesta: "Para no hacerle esperar más, le paso con alguien del equipo.", accion: "pasar_persona", idioma: "es", costo: 0 };
       else p = await pensar(ll.negocio_id, historial, texto, ll.numero_cliente);
       const ahora = new Date().toISOString();
-      const nueva = [...historial, { rol: "cliente", texto, t: ahora }, { rol: "ia", texto: p.respuesta, accion: p.accion, t: ahora, ...(p.fallo ? { fallo: true } : {}) }].slice(-80);
+      const citaVa = p.cita && p.cita.nombre ? { nombre: corto(p.cita.nombre, 80), telefono: corto(p.cita.telefono, 30), direccion: corto(p.cita.direccion), dia_hora: corto(p.cita.dia_hora, 120), motivo: corto(p.cita.motivo) } : null;
+      const nueva = [...historial, { rol: "cliente", texto, t: ahora }, { rol: "ia", texto: p.respuesta, accion: p.accion, t: ahora, ...(p.fallo ? { fallo: true } : {}), ...(citaVa ? { cita: citaVa } : {}) }].slice(-80);
+      const escribir = (async () => {
       await db.from("llamadas").update({ transcripcion: nueva, turnos: ll.turnos + 1, idioma: p.idioma, costo_ia: Number(ll.costo_ia) + Number(p.costo ?? 0) }).eq("id", ll.id);
       // una sola cita y un solo recado por llamada: si ya hay, se completa (no se duplica)
       const guardarUno = async (tabla: string, fila: Record<string, unknown>) => {
@@ -277,15 +291,26 @@ Deno.serve(async (req) => {
       if (p.accion === "recado_listo" && p.recado) {
         await guardarUno("llamada_recados", { nombre: corto(p.recado.nombre, 80), telefono: corto(p.recado.telefono, 30) ?? ll.numero_cliente, mensaje: corto(p.recado.mensaje, 1000) });
       }
-      return json({ ok: true, respuesta: p.respuesta, idioma: p.idioma, accion: p.accion });
+      })().catch((e) => console.error("guardar turno", e));
+      // si la persona cuelga enseguida, "fin" puede llegar antes: por eso fin espera un poquito (ver abajo)
+      enSegundoPlano(escribir);
+      return json({ ok: true, respuesta: p.respuesta, idioma: p.idioma, accion: p.accion, ms: p.ms });
     }
 
     if (b.accion === "fin") {
-      const { data: ll } = await db.from("llamadas").select("id,estado,transcripcion,sim").eq("id", b.llamada_id).single();
+      await new Promise((ok) => setTimeout(ok, 1500));   // deja terminar lo que se guardaba del último turno
+      const { data: ll } = await db.from("llamadas").select("id,negocio_id,numero_cliente,estado,transcripcion,sim").eq("id", b.llamada_id).single();
       if (!ll) return json({ ok: false });
       if (esAdminSim && !ll.sim) return json({ ok: false, motivo: "no_es_prueba" });
       const tr = Array.isArray(ll.transcripcion) ? ll.transcripcion : [];
       const resumen = tr.filter((h: any) => h.rol === "cliente").map((h: any) => h.texto).join(" · ").slice(0, 400);
+      // colgó a medias pidiendo una cita: se guarda igual para que el dueño le devuelva la llamada
+      const ultimaCita = [...tr].reverse().find((h: any) => h.rol === "ia" && h.cita?.nombre)?.cita;
+      if (ultimaCita) {
+        const { data: ya } = await db.from("llamada_citas").select("id").eq("llamada_id", ll.id).limit(1).maybeSingle();
+        if (!ya) await db.from("llamada_citas").insert({ negocio_id: ll.negocio_id, llamada_id: ll.id, nombre: ultimaCita.nombre, telefono: ultimaCita.telefono ?? ll.numero_cliente,
+          direccion: ultimaCita.direccion, dia_hora: ultimaCita.dia_hora, motivo: ("(colgó antes de terminar) " + (ultimaCita.motivo ?? "")).trim().slice(0, 200) });
+      }
       await db.from("llamadas").update({ estado: b.pasada ? "pasada_a_persona" : "terminada", fin: new Date().toISOString(),
         duracion_seg: Math.max(0, Math.min(36000, Number(b.duracion_seg ?? 0) | 0)), resumen }).eq("id", ll.id);
       return json({ ok: true });
