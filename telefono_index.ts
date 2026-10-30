@@ -164,7 +164,7 @@ Hablas por teléfono: contesta con 1 o 2 frases cortas, naturales y fáciles de 
 Contesta en el MISMO idioma en que te habla la persona (español o inglés). Si mezcla, usa el que más use.
 REGLA MÁS IMPORTANTE: usa SOLO los DATOS DEL NEGOCIO y las FICHAS de abajo. Nunca inventes precios, horarios, descuentos, fechas ni promesas.
 Si no sabes algo, dilo con honestidad y ofrece tomar un recado o pasar la llamada a una persona.
-CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, luego la dirección o ciudad, luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. Confirma su teléfono${numeroCliente ? ` (llama desde ${numeroCliente}; pregunta si ese es el bueno)` : ""}. Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Cuando tengas todo, accion "cita_lista".
+CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, luego la dirección o ciudad, luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. ${numeroCliente ? `Al final confirma su teléfono (llama desde ${numeroCliente}; pregunta si ese es el bueno).` : "Al final pide su número de teléfono."} Solo cuando tengas nombre, lugar, día y teléfono usa accion "cita_lista", y una sola vez; después usa "ninguna". Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Cuando tengas todo, accion "cita_lista".
 RECADOS: si quiere dejar un mensaje, pide nombre, teléfono y el mensaje; luego accion "recado_listo".
 Si pide hablar con una persona, está molesto, o es una emergencia o queja seria: accion "pasar_persona" (si es emergencia de vida, dile que cuelgue y llame al 911).
 Si se despide o ya terminó: accion "despedir" con una despedida corta.
@@ -262,13 +262,20 @@ Deno.serve(async (req) => {
       const ahora = new Date().toISOString();
       const nueva = [...historial, { rol: "cliente", texto, t: ahora }, { rol: "ia", texto: p.respuesta, accion: p.accion, t: ahora, ...(p.fallo ? { fallo: true } : {}) }].slice(-80);
       await db.from("llamadas").update({ transcripcion: nueva, turnos: ll.turnos + 1, idioma: p.idioma, costo_ia: Number(ll.costo_ia) + Number(p.costo ?? 0) }).eq("id", ll.id);
-      if (p.accion === "cita_lista" && p.cita) {
-        await db.from("llamada_citas").insert({ negocio_id: ll.negocio_id, llamada_id: ll.id, nombre: corto(p.cita.nombre, 80),
-          telefono: corto(p.cita.telefono, 30) ?? ll.numero_cliente, direccion: corto(p.cita.direccion), dia_hora: corto(p.cita.dia_hora, 120), motivo: corto(p.cita.motivo) });
+      // una sola cita y un solo recado por llamada: si ya hay, se completa (no se duplica)
+      const guardarUno = async (tabla: string, fila: Record<string, unknown>) => {
+        const limpio = Object.fromEntries(Object.entries(fila).filter(([, v]) => v != null && v !== ""));
+        const { data: ya } = await db.from(tabla).select("id").eq("llamada_id", ll.id).limit(1).maybeSingle();
+        if (ya) await db.from(tabla).update(limpio).eq("id", ya.id);
+        else await db.from(tabla).insert({ negocio_id: ll.negocio_id, llamada_id: ll.id, ...limpio });
+      };
+      if (p.cita && (p.accion === "cita_lista" || p.cita.nombre)) {
+        const { data: yaCita } = await db.from("llamada_citas").select("id").eq("llamada_id", ll.id).limit(1).maybeSingle();
+        if (p.accion === "cita_lista" || yaCita) await guardarUno("llamada_citas", { nombre: corto(p.cita.nombre, 80), telefono: corto(p.cita.telefono, 30) ?? ll.numero_cliente,
+          direccion: corto(p.cita.direccion), dia_hora: corto(p.cita.dia_hora, 120), motivo: corto(p.cita.motivo) });
       }
       if (p.accion === "recado_listo" && p.recado) {
-        await db.from("llamada_recados").insert({ negocio_id: ll.negocio_id, llamada_id: ll.id, nombre: corto(p.recado.nombre, 80),
-          telefono: corto(p.recado.telefono, 30) ?? ll.numero_cliente, mensaje: corto(p.recado.mensaje, 1000) });
+        await guardarUno("llamada_recados", { nombre: corto(p.recado.nombre, 80), telefono: corto(p.recado.telefono, 30) ?? ll.numero_cliente, mensaje: corto(p.recado.mensaje, 1000) });
       }
       return json({ ok: true, respuesta: p.respuesta, idioma: p.idioma, accion: p.accion });
     }
