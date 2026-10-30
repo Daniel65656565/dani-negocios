@@ -141,6 +141,11 @@ DATOS DEL NEGOCIO: ${JSON.stringify(datos).slice(0, 6000)}` : ""}`;
   try {
     r = await llamar(cuerpo);
     if (r.status === 400) { delete cuerpo.reasoning_effort; r = await llamar(cuerpo); }  // por si el modelo no acepta esa opción
+    if (r.status === 429 || r.status >= 500) {  // Groq dice "espera" (límite por minuto) o falla un momento: un solo reintento corto
+      const ra = Number(r.headers.get("retry-after") ?? "1");
+      await new Promise((ok) => setTimeout(ok, Math.min(3000, Math.max(500, (isFinite(ra) ? ra : 1) * 1000))));
+      r = await llamar(cuerpo);
+    }
   } catch (_) { await db.rpc("motor_anotar", { p_negocio: negocioId, p_paga: rv.paga, p_costo: 0, p_supo: false }); return null; }
   const o: any = await r.json().catch(() => ({}));
   const uso = o.usage ?? {};
