@@ -69,7 +69,7 @@ function valores(neg: any, idioma: "es" | "en", pregunta = ""): Record<string, s
     if (k > mejor) { mejor = k; elegido = s; }
   }
   if (elegido) {
-    v.nombre_servicio = elegido.nombre; v.precio_servicio = "$" + elegido.precio;
+    v.nombre_servicio = elegido.nombre; if (elegido.precio != null && elegido.precio !== "") v.precio_servicio = "$" + elegido.precio;
     const min = elegido.minutos ?? elegido.min; if (min) v.minutos_servicio = String(min);
   }
   for (const k of Object.keys(v)) if (!v[k]) delete v[k];
@@ -154,19 +154,29 @@ const ACCIONES = ["ninguna", "cita_lista", "recado_listo", "pasar_persona", "des
 const cad = (v: unknown, n = 200) => (typeof v === "string" ? v.trim().slice(0, n) : typeof v === "number" ? String(v) : "");
 // ¿En qué idioma habla? Cuenta palabras típicas de cada uno; si no se sabe, se queda con el de antes.
 function idiomaDe(t: string, antes: string): "es" | "en" {
-  const s = " " + String(t).toLowerCase().replace(/[^a-záéíóúñü' ]+/g, " ") + " ";
-  if (/[áéíóúñ¿¡]/.test(String(t))) return "es";
-  const en = (s.match(/ (the|you|your|what|how|is|are|do|does|can|want|need|my|i'm|it's|hi|hello|yes|please|thanks|thank|quote|panels?|number|morning|afternoon|friday|monday|tuesday|wednesday|thursday|saturday|sunday|and|for|with|this|that|have|would|like|call) /g) || []).length;
-  const es = (s.match(/ (el|la|los|las|que|quiero|necesito|cuanto|como|donde|por|para|con|una|uno|mi|me|yo|usted|gracias|hola|buenos|buenas|si|paneles|numero|llamo|soy|en|de|del|lunes|martes|miercoles|jueves|viernes|sabado|domingo|mañana|tarde) /g) || []).length;
-  if (en > es) return "en"; if (es > en) return "es"; return antes === "en" ? "en" : "es";
+  const crudo = String(t ?? "");
+  const pal = crudo.toLowerCase().replace(/[^a-záéíóúñü' ]+/g, " ").split(/\s+/).filter(Boolean);
+  const EN = new Set(["the","you","your","what","how","is","are","do","does","can","want","need","my","i","i'm","it's","hi","hello","yes","please","thanks","thank","quote","panel","panels","number","morning","afternoon","evening","friday","monday","tuesday","wednesday","thursday","saturday","sunday","and","for","with","this","that","have","would","like","call","speak","english","bye","goodbye","name","free","much","when","where","okay"]);
+  const ES = new Set(["el","la","los","las","que","quiero","necesito","cuanto","cuánto","como","cómo","donde","dónde","por","para","con","una","uno","mi","me","yo","usted","gracias","hola","buenos","buenas","si","sí","paneles","numero","número","llamo","soy","en","de","del","lunes","martes","miercoles","miércoles","jueves","viernes","sabado","sábado","domingo","mañana","tarde","noche","vivo","presupuesto","adiós","adios","quisiera","hablar","español","nombre","cuesta","cita","persona","no"]);
+  const FUERTES_ES = new Set(["hola","gracias","sí","buenos","buenas","adiós","adios","quiero","necesito","español"]), FUERTES_EN = new Set(["hi","hello","yes","thanks","please","english","bye","goodbye"]);
+  let en = 0, es = /[¿¡]/.test(crudo) ? 2 : 0;
+  for (const w of pal) { if (EN.has(w)) en++; if (ES.has(w)) es++; if (FUERTES_EN.has(w)) en++; if (FUERTES_ES.has(w)) es++; }
+  // nombres y lugares sueltos ("José Ramírez", "Orlando") no cambian el idioma: hace falta una diferencia clara
+  if (Math.abs(en - es) < 2) return antes === "en" ? "en" : "es";
+  return en > es ? "en" : "es";
 }
 
 async function pensar(negocioId: string, historial: any[], texto: string, numeroCliente: string | null, idiomaAntes: string) {
   const t0 = Date.now(); const ms: Record<string, number> = {};
+  if (esTrampa(texto)) {   // quieren engañar a la IA: respuesta fija, sin gastar el motor
+    const en = idiomaDe(texto, idiomaAntes) === "en";
+    return { respuesta: en ? "I can't help with that, but I can set up a free quote visit or take a message. What would you prefer?" : "Con eso no le puedo ayudar, pero le puedo apartar una visita para un presupuesto gratis o tomarle un recado. ¿Qué prefiere?", accion: "ninguna", idioma: en ? "en" : "es", costo: 0, supo: true, ms };
+  }
   const nd = await datosNegocio(negocioId);
   const habla = idiomaDe(texto, idiomaAntes); const enIngles = habla === "en";
   if (!nd || nd.neg.estado !== "activo") return { respuesta: "", accion: "pasar_persona", idioma: habla, costo: 0, supo: false };
   const { neg, datos } = nd;
+  const aDomicilio = neg.config?.a_domicilio === true || (neg.config?.a_domicilio !== false && /solar|panel|techo|plomer|electric|aire|limpieza|jard[ií]n|mudanza|fumig|pintura|domicilio|instalaci/i.test(String(neg.config?.tipoTexto ?? "") + " " + neg.tipo + " " + neg.nombre));
   // fichas parecidas a lo último que dijo (y a lo anterior, para preguntas cortas como "¿y cuánto cuesta?"), al mismo tiempo que se revisa el motor
   const consulta = [historial.filter((h) => h.rol === "cliente").slice(-1)[0]?.texto ?? "", texto].join(" ").slice(-300);
   const tipo = neg.config?.bibliotecaTipo ?? neg.tipo;
@@ -187,7 +197,7 @@ Hablas por teléfono: contesta con 1 o 2 frases cortas, naturales y fáciles de 
 IDIOMA: la persona está hablando en ${enIngles ? "INGLÉS: contesta SIEMPRE en inglés" : "ESPAÑOL: contesta en español"} (si cambia de idioma, cambia tú también).
 REGLA MÁS IMPORTANTE: usa SOLO los DATOS DEL NEGOCIO y las FICHAS de abajo. Nunca inventes precios, horarios, descuentos, fechas ni promesas.
 Si no sabes algo, dilo con honestidad y ofrece tomar un recado o pasar la llamada a una persona.
-CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, luego la dirección o ciudad, luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. ${numeroCliente ? `Al final confirma su teléfono (llama desde ${numeroCliente}; pregunta si ese es el bueno).` : "Al final pide su número de teléfono."} Solo cuando tengas nombre, lugar, día y teléfono usa accion "cita_lista", y una sola vez; después usa "ninguna". Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Mientras pides los datos, llena SIEMPRE en "cita" todo lo que ya te dijo (aunque falte algo), así no se pierde si cuelga.
+CITAS: si quiere una visita o presupuesto, pide los datos de UNO EN UNO (haz UNA sola pregunta por respuesta, nunca dos): primero el nombre, ${aDomicilio ? "luego la dirección o ciudad (vamos a su casa), " : ""}luego qué día y hora le conviene. No vuelvas a pedir lo que ya te dijo. ${numeroCliente ? `Al final confirma su teléfono (llama desde ${numeroCliente}; pregunta si ese es el bueno).` : "Al final pide su número de teléfono."} Solo cuando tengas nombre, ${aDomicilio ? "lugar, " : ""}día y teléfono usa accion "cita_lista", y una sola vez; después usa "ninguna". Nunca digas que la cita quedó confirmada: di que el equipo le llama para confirmarla. Mientras pides los datos, llena SIEMPRE en "cita" todo lo que ya te dijo (aunque falte algo), así no se pierde si cuelga.
 RECADOS: si quiere dejar un mensaje, pide de uno en uno su nombre, ${numeroCliente ? "confirma su teléfono" : "su teléfono"} y el mensaje. Llena SIEMPRE en "recado" lo que ya tienes. Solo cuando tengas nombre y mensaje usa accion "recado_listo", una sola vez, y despídete con que el encargado le devuelve la llamada.
 Si pide hablar con una persona, está molesto, o es una emergencia o queja seria: accion "pasar_persona" con una respuesta corta como "Claro, le comunico" (si es emergencia de vida, dile que cuelgue y llame al 911).
 Si se despide o ya terminó: accion "despedir" con una despedida corta.
@@ -223,7 +233,7 @@ FICHAS: ${JSON.stringify(fichas).slice(0, 2500)}`;
   let j: any = null; try { j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch (_) { j = null; }
   const resp = cad(j?.respuesta, 400).replace(/[*#_`>\[\]]/g, "").trim();
   const supo = r.ok && !!resp;
-  enSegundoPlano(db.rpc("motor_anotar", { p_negocio: negocioId, p_paga: "admin", p_costo: costo, p_supo: supo }));
+  enSegundoPlano(Promise.resolve(db.rpc("motor_anotar", { p_negocio: negocioId, p_paga: "admin", p_costo: costo, p_supo: supo })).catch((e) => console.error("motor_anotar", e)));
   if (!supo) {
     const fallaAntes = historial.length > 0 && (historial[historial.length - 1] as any).fallo === true;
     if (!fallaAntes) return { respuesta: enIngles ? "Sorry, could you say that again?" : "Disculpe, ¿me lo puede repetir?", accion: "ninguna", idioma: enIngles ? "en" : "es", costo, supo, fallo: true, ms };
@@ -233,10 +243,19 @@ FICHAS: ${JSON.stringify(fichas).slice(0, 2500)}`;
   const cita = j?.cita && typeof j.cita === "object" ? { nombre: cad(j.cita.nombre, 80), telefono: cad(j.cita.telefono, 30), direccion: cad(j.cita.direccion), dia_hora: cad(j.cita.dia_hora, 120), motivo: cad(j.cita.motivo) } : null;
   const recado = j?.recado && typeof j.recado === "object" ? { nombre: cad(j.recado.nombre, 80), telefono: cad(j.recado.telefono, 30), mensaje: cad(j.recado.mensaje, 1000) } : null;
   // la IA a veces dice "lista" antes de tiempo: solo vale si de verdad están los datos
-  if (accion === "cita_lista" && !(cita && cita.nombre && cita.direccion && cita.dia_hora && (cita.telefono || numeroCliente))) accion = "ninguna";
+  if (accion === "cita_lista" && !(cita && cita.nombre && (cita.direccion || !aDomicilio) && cita.dia_hora && (cita.telefono || numeroCliente))) accion = "ninguna";
   if (accion === "recado_listo" && !(recado && recado.nombre && recado.mensaje && (recado.telefono || numeroCliente))) accion = "ninguna";
   const idioma = j?.idioma === "en" || j?.idioma === "es" ? j.idioma : habla;
-  return { respuesta: resp, accion, idioma, cita, recado, costo, supo, ms };
+  // "cita_lista"/"recado_listo" solo una vez por llamada
+  const yaHecho = (a: string) => historial.some((h) => h && h.rol === "ia" && h.accion === a);
+  let respuesta = resp;
+  if ((accion === "cita_lista" && yaHecho("cita_lista")) || (accion === "recado_listo" && yaHecho("recado_listo"))) accion = "ninguna";
+  // si la persona se despide, se cuelga (aunque la IA no lo haya marcado)
+  if (accion === "ninguna" && /\b(adi[oó]s|chao|chau|bye|goodbye|hasta luego|hasta pronto|eso es todo|eso era todo|that'?s all|nada m[aá]s|no,? gracias|no thanks)\b/i.test(texto)) {
+    accion = "despedir";
+    if (yaHecho("cita_lista") || yaHecho("recado_listo") || !/[.!]$/.test(respuesta)) respuesta = idioma === "en" ? "Thank you for calling. Have a great day!" : "Gracias por llamar. ¡Que tenga un buen día!";
+  }
+  return { respuesta, accion, idioma, cita, recado, costo, supo, ms };
 }
 
 const corto = (v: unknown, n = 200) => (v == null ? null : String(v).trim().slice(0, n) || null);
