@@ -10,7 +10,8 @@ const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABA
 const GRACIA_DIAS = 3;   // sin internet, el complemento sigue funcionando hasta valida_hasta
 const RX_CLAVE = /^DANI-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const RX_MAQ = /^[0-9a-f]{64}$/;
-const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };   // es pública igual; así se puede probar desde un navegador
+const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const b64 = (u: Uint8Array) => { let s = ""; for (const c of u) s += String.fromCharCode(c); return btoa(s); };
 const b64deUrl = (s: string) => { const t = s.replace(/-/g, "+").replace(/_/g, "/"); return t + "=".repeat((4 - t.length % 4) % 4); };
 
@@ -42,6 +43,7 @@ async function firmar(obj: Record<string, unknown>) {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, estado: "error", motivo: "metodo" }, 405);
   try {
     const b = await req.json().catch(() => ({}));
