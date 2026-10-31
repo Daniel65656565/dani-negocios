@@ -1,0 +1,200 @@
+[
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "que_es",
+  "preguntas_es": [
+   "qué es el panel dani",
+   "qué es el panel de ninjatrader",
+   "para qué sirve el panel dani"
+  ],
+  "preguntas_en": [
+   "what is the dani panel",
+   "what is the ninjatrader panel"
+  ],
+  "respuesta_es": "El Panel Dani es un complemento para NinjaTrader 8 en Windows: junta tu gestor de riesgo, órdenes programadas, cuentas de fondeo y copiador en una sola pantalla. Tú decides cada operación; no es asesoría. Lo ves en el menú de Robotito → Panel NinjaTrader.",
+  "respuesta_en": "The Dani Panel is an add-on for NinjaTrader 8 on Windows: it puts your risk manager, scheduled orders, funded accounts and copier on one screen. You decide every trade; it is not advice. Find it in Robotito's menu → NinjaTrader Panel.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "comprar",
+  "preguntas_es": [
+   "cómo compro el panel",
+   "dónde compro el panel dani",
+   "quiero comprar el panel de ninjatrader"
+  ],
+  "preguntas_en": [
+   "how do i buy the panel",
+   "where can i buy the dani panel"
+  ],
+  "respuesta_es": "Entra con tu cuenta (con correo), abre el menú de Robotito → Panel NinjaTrader, escoge tu plan, marca la casilla de los términos y paga en la página segura de Stripe. La clave te sale en la app al momento.",
+  "respuesta_en": "Sign in with your account (with email), open Robotito's menu → NinjaTrader Panel, choose your plan, check the terms box and pay on Stripe's secure page. Your key shows up in the app right away.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "clave",
+  "preguntas_es": [
+   "dónde veo mi clave del panel",
+   "perdí mi clave de licencia",
+   "cuál es mi licencia del panel"
+  ],
+  "preguntas_en": [
+   "where is my panel key",
+   "i lost my license key"
+  ],
+  "respuesta_es": "Tu clave está en el menú de Robotito → Panel NinjaTrader → Mis licencias. Ahí tienes el botón Copiar. Empieza con DANI-.",
+  "respuesta_en": "Your key is in Robotito's menu → NinjaTrader Panel → My licenses. There's a Copy button. It starts with DANI-.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "otra_pc",
+  "preguntas_es": [
+   "cómo paso mi licencia a otra computadora",
+   "cambié de computadora y el panel no entra",
+   "dice máquinas llenas"
+  ],
+  "preguntas_en": [
+   "how do i move my license to another computer",
+   "it says too many computers"
+  ],
+  "respuesta_es": "Cada licencia sirve en un número de computadoras a la vez (normalmente 2). Para usarla en otra, abre el menú de Robotito → Panel NinjaTrader, busca la computadora vieja y toca Soltar dos veces. Luego escribe la clave en la nueva.",
+  "respuesta_en": "Each license works on a set number of computers at once (usually 2). To use it on another one, open Robotito's menu → NinjaTrader Panel, find the old computer and tap Release twice. Then type the key on the new one.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "instalar",
+  "preguntas_es": [
+   "cómo instalo el panel",
+   "dónde bajo el instalador del panel",
+   "cómo descargo el panel dani"
+  ],
+  "preguntas_en": [
+   "how do i install the panel",
+   "where do i download the panel"
+  ],
+  "respuesta_es": "Con tu licencia activa, abre el menú de Robotito → Panel NinjaTrader y toca Descargar el instalador (el enlace sirve 10 minutos). Los pasos para instalarlo en NinjaTrader 8 están en la página Cómo instalar el Panel.",
+  "respuesta_en": "With an active license, open Robotito's menu → NinjaTrader Panel and tap Download the installer (the link works for 10 minutes). The steps to install it in NinjaTrader 8 are on the How to install the Panel page.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "cancelar",
+  "preguntas_es": [
+   "cómo cancelo el panel",
+   "quiero cancelar mi suscripción del panel",
+   "cómo dejo de pagar el panel"
+  ],
+  "preguntas_en": [
+   "how do i cancel the panel",
+   "cancel my panel subscription"
+  ],
+  "respuesta_es": "Abre el menú de Robotito → Panel NinjaTrader y toca Administrar mi pago: ahí cancelas en la página de Stripe. El Panel sigue funcionando hasta el final de lo que ya pagaste.",
+  "respuesta_en": "Open Robotito's menu → NinjaTrader Panel and tap Manage my payment: you cancel there on Stripe's page. The Panel keeps working until the end of what you already paid.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "renovar",
+  "preguntas_es": [
+   "cuándo se renueva mi panel",
+   "me van a cobrar otra vez el panel",
+   "mi licencia se venció"
+  ],
+  "preguntas_en": [
+   "when does my panel renew",
+   "my license expired"
+  ],
+  "respuesta_es": "Los planes mensuales, de 6 meses y anuales se renuevan solos con la misma tarjeta, y te avisamos 7 días antes. Si se venció, compra otra vez en el menú de Robotito → Panel NinjaTrader. La fecha está en Mis licencias.",
+  "respuesta_en": "Monthly, 6-month and yearly plans renew automatically on the same card, and we notify you 7 days before. If it expired, buy again in Robotito's menu → NinjaTrader Panel. The date is under My licenses.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "sin_internet",
+  "preguntas_es": [
+   "el panel funciona sin internet",
+   "se me fue el internet y el panel"
+  ],
+  "preguntas_en": [
+   "does the panel work offline"
+  ],
+  "respuesta_es": "Sí, hasta 3 días sin internet. Después necesita conectarse un momento para revisar la licencia. Solo manda la clave, una huella de la computadora y la versión; nunca tus cuentas ni tus operaciones.",
+  "respuesta_en": "Yes, for up to 3 days offline. Then it needs to connect briefly to check the license. It only sends the key, a computer fingerprint and the version; never your accounts or trades.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "bloqueada",
+  "preguntas_es": [
+   "mi licencia dice bloqueada",
+   "por qué se bloqueó mi licencia del panel"
+  ],
+  "preguntas_en": [
+   "my license says blocked"
+  ],
+  "respuesta_es": "Una licencia se bloquea si se devolvió el pago, si hubo una disputa con el banco o si se compartió la clave. Escríbenos desde la app para revisarlo.",
+  "respuesta_en": "A license is blocked if the payment was refunded, there was a bank dispute or the key was shared. Write to us from the app so we can review it.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "riesgo",
+  "preguntas_es": [
+   "el panel me hace ganar dinero",
+   "el panel da señales",
+   "el panel es seguro para ganar"
+  ],
+  "preguntas_en": [
+   "does the panel make money",
+   "does the panel give signals"
+  ],
+  "respuesta_es": "No. El Panel es una herramienta: no da señales, no recomienda operaciones y no promete ganancias. Operar futuros tiene riesgo alto y puedes perder más de lo que pusiste.",
+  "respuesta_en": "No. The Panel is a tool: it doesn't give signals, recommend trades or promise profits. Futures trading is high risk and you can lose more than you put in.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "afiliados",
+  "preguntas_es": [
+   "cómo gano recomendando el panel",
+   "qué es recomienda y gana",
+   "cómo funciona mi enlace de afiliado"
+  ],
+  "preguntas_en": [
+   "how do i earn by referring the panel",
+   "what is refer and earn"
+  ],
+  "respuesta_es": "En el menú de Robotito → Panel NinjaTrader → Recomienda y gana: aceptas los términos y recibes tu enlace y tu QR. Ganas un porcentaje solo cuando alguien paga con tu enlace; se aprueba a los días que dice la app. Di siempre que ganas una comisión.",
+  "respuesta_en": "In Robotito's menu → NinjaTrader Panel → Refer and earn: accept the terms and get your link and QR. You earn a percentage only when someone pays with your link; it's approved after the days the app shows. Always say you earn a commission.",
+  "accion": "ninguna"
+ },
+ {
+  "tipo_negocio": "app",
+  "tema": "panel_ninjatrader",
+  "subtema": "cobro_afiliado",
+  "preguntas_es": [
+   "cuándo me pagan mis comisiones",
+   "cómo cobro lo que gané recomendando"
+  ],
+  "preguntas_en": [
+   "when do i get paid my commissions"
+  ],
+  "respuesta_es": "Cada comisión espera unos días por si hay devoluciones; luego queda aprobada. Cuando lo aprobado llega al mínimo que dice la app, te pagamos y lo ves como ya cobrado.",
+  "respuesta_en": "Each commission waits some days in case of refunds; then it's approved. When approved earnings reach the minimum shown in the app, we pay you and it shows as paid.",
+  "accion": "ninguna"
+ }
+]
