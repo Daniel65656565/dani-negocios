@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="icono-192.png">
+<meta name="robots" content="noindex">
+<title>Panel Dani para NinjaTrader · Dani Pro</title>
+<style>
+:root{--bg:#F6F8F9;--fg:#10232F;--muted:#4A5F6C;--line:#D6E2E7;--acc:#0B5C7A;--card:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0D1A21;--fg:#EAF2F6;--muted:#A7BBC6;--line:#28404D;--acc:#4FB3D6;--card:#15252E;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:46rem;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:1.7em;line-height:1.2;margin:.4em 0 .6em;text-wrap:balance} h2{font-size:1.15em;margin:1.6em 0 .4em}
+a{color:var(--acc)} .ver{font-size:.9em;color:var(--muted)} .nota{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.95em}
+.tabla{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:.95em;background:var(--card)} th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.boton{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700}
+li{margin:.3em 0}
+</style>
+</head>
+<body>
+<main>
+<p class="ver"><a href="./">Dani Pro</a> · <a href="terminos-panel.html">Términos del Panel</a> · <a href="#en" lang="en">English</a></p>
+<h1>🧩 Panel Dani para NinjaTrader 8</h1>
+<p>Un panel de control para operar futuros en NinjaTrader 8 con más orden: tus reglas de riesgo, tus órdenes y tus cuentas en una sola pantalla. Tú decides cada operación.</p>
+<p><a class="boton" href="./#panel">Comprar en la app Dani Pro</a></p>
+
+<h2>Lo que trae</h2>
+<ul>
+<li><b>Gestor de riesgo:</b> pones cuánto puedes perder en el día; al llegar, el panel se apaga solo.</li>
+<li><b>Órdenes programadas:</b> hora, compra o venta, contratos, ganancia y stop; con break-even y trailing stop.</li>
+<li><b>Noticias fuertes:</b> si lo prendes, cierra tus operaciones unos minutos antes de una noticia de alto impacto.</li>
+<li><b>Cuentas de fondeo:</b> ves lo ganado en el día, el total de la cuenta y el drawdown.</li>
+<li><b>Replicador:</b> copia lo de tu cuenta principal a tus otras cuentas.</li>
+<li><b>Tu pantalla, a tu manera:</b> mueves y agrandas cada cuadro.</li>
+</ul>
+<p class="nota">Funciona dentro de tu NinjaTrader 8 en Windows, con tus propios datos de mercado. Nosotros no vendemos datos del mercado ni manejamos tu cuenta.</p>
+
+<h2>Planes</h2>
+<div id="planes"><p class="ver">Cargando precios…</p></div>
+<p class="ver">Pagas con tarjeta en la página segura de Stripe. Los planes se renuevan solos hasta que canceles; cancelas cuando quieras desde la app. Cada licencia sirve en hasta 2 computadoras a la vez (puedes pasarla a otra).</p>
+
+<h2>Cómo se compra</h2>
+<ol>
+<li>Abre la app Dani Pro y entra con tu cuenta (con correo).</li>
+<li>Menú de Robotito → <b>Panel NinjaTrader</b>, escoge tu plan y acepta los términos.</li>
+<li>Paga en Stripe. Tu clave aparece en la app al momento, junto con el instalador.</li>
+<li>Instala el Panel en NinjaTrader 8 y escribe tu clave.</li>
+</ol>
+
+<h2>Aviso de riesgo</h2>
+<p class="nota">Operar futuros tiene riesgo alto. Puedes perder más del dinero que pusiste. Lo que pasó antes no asegura lo que pasará después. El Panel es una herramienta de software: no es asesoría de inversión, no recomienda comprar ni vender y no promete ganancias. Profeta Futuro LLC no es corredor ni asesor registrado. NinjaTrader es marca de su dueño; el Panel no es un producto de NinjaTrader.</p>
+
+<h2 id="en" lang="en">Dani Panel for NinjaTrader 8 (English)</h2>
+<div lang="en">
+<p>A control panel for trading futures in NinjaTrader 8 with more order: your risk rules, your orders and your accounts on one screen. You decide every trade.</p>
+<ul>
+<li><b>Risk manager:</b> set your daily loss limit; when it's reached, the panel turns itself off.</li>
+<li><b>Scheduled orders</b> with break-even and trailing stop.</li>
+<li><b>High-impact news:</b> optionally closes your trades a few minutes before.</li>
+<li><b>Funded accounts:</b> daily P&amp;L, account total and drawdown.</li>
+<li><b>Copier</b> from your main account to your other accounts.</li>
+</ul>
+<p>Buy it in the Dani Pro app: Robotito's menu → NinjaTrader Panel. <a href="panel-terms.html">Panel terms</a>.</p>
+<p class="nota">Futures trading is high risk and you can lose more than you put in. Past results don't guarantee future results. The Panel is software: it is not investment advice, it doesn't recommend trades and it doesn't promise profits.</p>
+</div>
+</main>
+<script src="supabase-config.js"></script>
+<script>
+(async function(){ const box=document.getElementById("planes");
+  const per={mes:" al mes","6meses":" cada 6 meses",anual:" al año",unico:" una sola vez"};
+  const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  try{ const c=window.MN_SUPABASE||{}; const k=c.publishableKey||c.anonKey;
+    const r=await fetch(c.url+"/functions/v1/pagos",{method:"POST",headers:{"Content-Type":"application/json",apikey:k,Authorization:"Bearer "+k},body:JSON.stringify({accion:"estado",idioma:"es"})});
+    const j=await r.json(); const P=(j&&j.ok&&Array.isArray(j.panel))?j.panel:[];
+    if(!P.length){ box.innerHTML='<p class="nota">Muy pronto. Los planes todavía no están a la venta.</p>'; return; }
+    box.innerHTML='<div class="tabla"><table><tr><th>Plan</th><th>Precio</th><th></th></tr>'+P.map(p=>'<tr><td><b>'+esc(p.nombre)+'</b>'+(p.descripcion?'<br><span class="ver">'+esc(p.descripcion)+'</span>':'')+(p.quedan!=null?'<br><b>Quedan '+esc(p.quedan)+'</b>':'')+'</td><td>$'+Number(p.precio_usd).toFixed(2)+esc(per[p.intervalo]||"")+'</td><td><a href="./#panel">Comprar</a></td></tr>').join("")+'</table></div>';
+  }catch(e){ box.innerHTML='<p class="nota">No se pudieron cargar los precios. Ábrelos en la app.</p>'; } })();
+</script>
+</body>
+</html>
