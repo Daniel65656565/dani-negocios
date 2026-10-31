@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="icono-192.png">
+<meta name="robots" content="noindex">
+<title>Cómo instalar el Panel Dani · Dani Pro</title>
+<style>
+:root{--bg:#F6F8F9;--fg:#10232F;--muted:#4A5F6C;--line:#D6E2E7;--acc:#0B5C7A;--card:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0D1A21;--fg:#EAF2F6;--muted:#A7BBC6;--line:#28404D;--acc:#4FB3D6;--card:#15252E;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:46rem;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:1.7em;line-height:1.2;margin:.4em 0 .6em;text-wrap:balance} h2{font-size:1.15em;margin:1.6em 0 .4em}
+a{color:var(--acc)} .ver{font-size:.9em;color:var(--muted)} .nota{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.95em}
+.tabla{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:.95em;background:var(--card)} th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.boton{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700}
+li{margin:.3em 0}
+</style>
+</head>
+<body>
+<main>
+<p class="ver"><a href="panel.html">Panel Dani</a> · <a href="./">Abrir la app</a> · <a href="#en" lang="en">English</a></p>
+<h1>Cómo instalar el Panel Dani en NinjaTrader 8</h1>
+<p class="nota">Necesitas: Windows, NinjaTrader 8 instalado y una licencia activa. Toma unos 5 minutos.</p>
+
+<h2>1. Baja el instalador</h2>
+<p>En la app Dani Pro: menú de Robotito → <b>Panel NinjaTrader</b> → <b>Descargar el instalador</b>. Hazlo desde la computadora donde tienes NinjaTrader (el enlace sirve 10 minutos). Guárdalo en tu carpeta Descargas y <b>no lo descomprimas</b>.</p>
+
+<h2>2. Impórtalo en NinjaTrader</h2>
+<ol>
+<li>Abre NinjaTrader 8.</li>
+<li>En la ventana principal (Control Center) ve a <b>Tools → Import → NinjaScript Add-On…</b></li>
+<li>Escoge el archivo que bajaste y toca <b>Open</b>.</li>
+<li>Si pregunta si quieres reemplazar una versión anterior, di que sí.</li>
+<li>Cuando diga que se importó bien, cierra NinjaTrader y ábrelo otra vez.</li>
+</ol>
+
+<h2>3. Abre el Panel y escribe tu clave</h2>
+<ol>
+<li>Abre el Panel Dani desde NinjaTrader.</li>
+<li>La primera vez te pide la clave. Cópiala de la app (Mis licencias → <b>Copiar</b>); empieza con DANI-.</li>
+<li>Escribe un nombre para esta computadora (por ejemplo "PC de la casa") y toca Activar.</li>
+</ol>
+
+<h2>Si algo no sale</h2>
+<ul>
+<li><b>"Máquinas llenas":</b> ya usas la licencia en el máximo de computadoras. En la app toca <b>Soltar</b> en la que ya no usas.</li>
+<li><b>"Vencida" o "cancelada":</b> renueva en la app.</li>
+<li><b>Sin internet:</b> el Panel sigue hasta 3 días; luego necesita conectarse un momento.</li>
+<li><b>Windows avisa que el archivo no es común:</b> bájalo solo desde la app Dani Pro. Si viene de otro lugar, no lo abras.</li>
+<li><b>No se importa:</b> revisa que tu NinjaTrader sea la versión 8 y que el archivo no esté descomprimido.</li>
+</ul>
+<p class="nota">Operar futuros tiene riesgo alto. El Panel es una herramienta: no es asesoría y no promete ganancias. <a href="terminos-panel.html">Términos del Panel</a>.</p>
+
+<h2 id="en" lang="en">How to install (English)</h2>
+<ol lang="en">
+<li>In the Dani Pro app: Robotito's menu → NinjaTrader Panel → <b>Download the installer</b> (on the computer with NinjaTrader; the link works 10 minutes). Don't unzip it.</li>
+<li>In NinjaTrader 8: <b>Tools → Import → NinjaScript Add-On…</b>, choose the file, Open. Restart NinjaTrader.</li>
+<li>Open the Dani Panel, paste your key (starts with DANI-, copy it from My licenses) and name this computer.</li>
+<li>"Too many computers": tap <b>Release</b> on the old one in the app. Works offline up to 3 days.</li>
+</ol>
+</main>
+</body>
+</html>
