@@ -67,6 +67,11 @@ li{margin:.3em 0}
 </main>
 <script src="supabase-config.js"></script>
 <script>
+// enlace de afiliado: panel.html?ref=CODIGO → los botones de comprar llevan el código a la app
+(function(){ const m=(new URLSearchParams(location.search).get("ref")||"").toUpperCase(); if(!/^[A-Z0-9]{6}$/.test(m)) return;
+  const fix=()=>document.querySelectorAll('a[href="./#panel"]').forEach(a=>a.href="./#ref-"+m); fix(); new MutationObserver(fix).observe(document.body,{childList:true,subtree:true}); })();
+</script>
+<script>
 (async function(){ const box=document.getElementById("planes");
   const per={mes:" al mes","6meses":" cada 6 meses",anual:" al año",unico:" una sola vez"};
   const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
